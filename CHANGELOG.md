@@ -23,7 +23,7 @@
    config.max_workers = 10
   end
   ```
-    
+
   ⚠️ By default, this gem is not enabled.
 
 **Changes:**

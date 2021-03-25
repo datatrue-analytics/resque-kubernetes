@@ -10,11 +10,12 @@ module Resque
     class JobsManager
       include Resque::Kubernetes::ManifestConformance
 
-      attr_reader :owner
-      private :owner
+      attr_reader :owner, :args
+      private :owner, :args
 
-      def initialize(owner)
+      def initialize(owner, args)
         @owner             = owner
+        @args              = args
         @default_namespace = "default"
       end
 
@@ -39,7 +40,7 @@ module Resque
       end
 
       def apply_kubernetes_job
-        manifest = DeepHash.new.merge!(owner.job_manifest)
+        manifest = DeepHash.new.merge!(owner.job_manifest(*args))
         ensure_namespace(manifest)
 
         # Do not start job if we have reached our maximum count
@@ -95,7 +96,7 @@ module Resque
             namespace:      namespace
         )
         running = resque_jobs.reject { |job| job.spec.completions == job.status.succeeded }
-        running.size >= owner.max_workers
+        running.size >= owner.max_workers(*args)
       end
     end
   end

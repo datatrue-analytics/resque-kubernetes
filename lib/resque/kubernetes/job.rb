@@ -82,10 +82,10 @@ module Resque
       end
 
       # A before_enqueue hook that adds worker jobs to the cluster.
-      def before_enqueue_kubernetes_job(*_args)
+      def before_enqueue_kubernetes_job(*args)
         return unless Resque::Kubernetes.enabled
 
-        manager = JobsManager.new(self)
+        manager = JobsManager.new(self, args)
         manager.reap_finished_jobs
         manager.reap_finished_pods
         manager.apply_kubernetes_job
@@ -111,7 +111,7 @@ module Resque
       #      # Scale based on time of day
       #      Time.now.hour < 8 ? 15 : 5
       #    end
-      def max_workers
+      def max_workers(*_args)
         Resque::Kubernetes.max_workers
       end
     end
