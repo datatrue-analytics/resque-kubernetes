@@ -63,6 +63,7 @@ module Resque
       end
 
       def client(scope)
+        return RetriableClient.new(owner.kubeclient(*args)) if owner.respond_to?("kubeclient")
         return RetriableClient.new(Resque::Kubernetes.kubeclient) if Resque::Kubernetes.kubeclient
         client = build_client(scope)
         RetriableClient.new(client) if client
