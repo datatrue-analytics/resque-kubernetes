@@ -40,9 +40,6 @@ module Resque
       end
 
       def apply_kubernetes_job
-        manifest = DeepHash.new.merge!(owner.job_manifest(*args))
-        ensure_namespace(manifest)
-
         # Do not start job if we have reached our maximum count
         return if jobs_maxed?(manifest["metadata"]["name"], manifest["metadata"]["namespace"])
 
@@ -53,6 +50,10 @@ module Resque
       end
 
       private
+
+      def manifest
+        @manifest ||= ensure_namespace(DeepHash.new.merge!(owner.job_manifest(*args)))
+      end
 
       def jobs_client
         @jobs_client ||= client("/apis/batch")
