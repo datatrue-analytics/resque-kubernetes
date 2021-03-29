@@ -1,3 +1,39 @@
+# V3.0.0
+**Breaking Change:**
+- Job arguments are now passed to `job_manifest` and `max_workers` methods
+
+  To migrate you will need to update your job_manifest and max_workers to accept
+  your job arguments:
+
+  Before:
+  ```ruby
+  class << self
+    def job_manifest
+      # create manifest
+    end
+
+    def max_workers
+      # determine maximum number of workers
+    end
+  end
+  ```
+
+  After
+  ```ruby
+  class << self
+    def job_manifest(*args)
+      # create manifest (optionally use args)
+    end
+
+    def max_workers(*args)
+      # determine maximum number of workers (optionally use args)
+    end
+  end
+  ```
+
+**Changes**
+- Job classes can specify a custom `kubeclient` by implementing the `kubeclient` method
+
 # V2.0.0
 **Breaking Change:**
 - The `environments` configuration as been replaced by a more flexible `enabled` property.

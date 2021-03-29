@@ -231,6 +231,30 @@ end
 Because this uses the `Job` resource, make sure to connect to the `/apis/batch`
 API endpoint in your client.
 
+Similar to `max_workers`, the `kubeclient` method can be implemented on
+individual Resque Job classes. This per job value takes precedence over the
+global value.
+
+```ruby
+class ResourceIntensiveJob
+  extend Resque::Kubernetes::Job
+
+  class << self
+    def perform(*args)
+      # ...
+    end
+
+    def job_manifest(*args)
+      # ...
+    end
+
+    def kubeclient(*args)
+      Kubeclient::Client.new("http://localhost:8080/apis/batch")
+    end
+  end
+end
+```
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at
