@@ -224,12 +224,9 @@ There are many other ways to connect and you can do so by providing your own
 # config/initializers/resque-kubernetes.rb
 
 Resque::Kubernetes.configuration do |config|
- config.kubeclient = Kubeclient::Client.new("http://localhost:8080/apis/batch")
+ config.kubeclient = ->(scope) { Kubeclient::Client.new("http://localhost:8080" + scope) }
 end
 ```
-
-Because this uses the `Job` resource, make sure to connect to the `/apis/batch`
-API endpoint in your client.
 
 Similar to `max_workers`, the `kubeclient` method can be implemented on
 individual Resque Job classes. This per job value takes precedence over the
@@ -248,8 +245,8 @@ class ResourceIntensiveJob
       # ...
     end
 
-    def kubeclient(*args)
-      Kubeclient::Client.new("http://localhost:8080/apis/batch")
+    def kubeclient(scope, *args)
+      Kubeclient::Client.new("http://localhost:8080" + scope)
     end
   end
 end

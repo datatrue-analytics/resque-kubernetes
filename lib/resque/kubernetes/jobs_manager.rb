@@ -52,7 +52,11 @@ module Resque
       private
 
       def manifest
-        @manifest ||= ensure_namespace(DeepHash.new.merge!(owner.job_manifest(*args)))
+        @manifest ||= begin
+          m = DeepHash.new.merge!(owner.job_manifest(*args))
+          ensure_namespace(m)
+          m
+        end
       end
 
       def jobs_client
@@ -64,8 +68,8 @@ module Resque
       end
 
       def client(scope)
-        return RetriableClient.new(owner.kubeclient(*args)) if owner.respond_to?("kubeclient")
-        return RetriableClient.new(Resque::Kubernetes.kubeclient) if Resque::Kubernetes.kubeclient
+        return RetriableClient.new(owner.kubeclient(scope, *args)) if owner.respond_to?("kubeclient")
+        return RetriableClient.new(Resque::Kubernetes.kubeclient.call(scope)) unless Resque::Kubernetes.kubeclient.nil?
         client = build_client(scope)
         RetriableClient.new(client) if client
       end

@@ -30,6 +30,7 @@
     end
   end
   ```
+- If specified, kubeclient must now be a proc / lambda that accepts a scope argument
 
 **Changes**
 - Job classes can specify a custom `kubeclient` by implementing the `kubeclient` method
