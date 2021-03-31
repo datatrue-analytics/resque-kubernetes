@@ -41,7 +41,7 @@ module Resque
 
       def apply_kubernetes_job
         # Do not start job if we have reached our maximum count
-        return if jobs_maxed?(manifest["metadata"]["name"], manifest["metadata"]["namespace"])
+        return if jobs_maxed?(manifest["metadata"]["name"])
 
         adjust_manifest(manifest)
 
@@ -57,6 +57,10 @@ module Resque
           ensure_namespace(m)
           m
         end
+      end
+
+      def namespace
+        manifest["metadata"]["namespace"]
       end
 
       def jobs_client
@@ -83,12 +87,12 @@ module Resque
       end
 
       def finished_jobs
-        resque_jobs = jobs_client.get_jobs(label_selector: "resque-kubernetes=job")
+        resque_jobs = jobs_client.get_jobs(namespace: namespace, label_selector: "resque-kubernetes=job")
         resque_jobs.select { |job| job.spec.completions == job.status.succeeded }
       end
 
       def finished_pods
-        resque_jobs = pods_client.get_pods(label_selector: "resque-kubernetes=pod")
+        resque_jobs = pods_client.get_pods(namespace: namespace, label_selector: "resque-kubernetes=pod")
         resque_jobs.select do |pod|
           pod.status.phase == "Succeeded" && pod.status.containerStatuses.all? do |status|
             status.state.terminated.reason == "Completed"
@@ -96,7 +100,7 @@ module Resque
         end
       end
 
-      def jobs_maxed?(name, namespace)
+      def jobs_maxed?(name)
         resque_jobs = jobs_client.get_jobs(
             label_selector: "resque-kubernetes=job,resque-kubernetes-group=#{name}",
             namespace:      namespace
