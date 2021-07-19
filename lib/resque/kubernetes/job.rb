@@ -86,8 +86,6 @@ module Resque
         return unless Resque::Kubernetes.enabled
 
         manager = JobsManager.new(self, args)
-        manager.reap_finished_jobs
-        manager.reap_finished_pods
         manager.apply_kubernetes_job
       end
 

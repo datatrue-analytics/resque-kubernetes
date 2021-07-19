@@ -19,26 +19,6 @@ module Resque
         @default_namespace = "default"
       end
 
-      def reap_finished_jobs
-        finished_jobs.each do |job|
-          begin
-            jobs_client.delete_job(job.metadata.name, job.metadata.namespace)
-          rescue KubeException => e
-            raise unless e.error_code == 404
-          end
-        end
-      end
-
-      def reap_finished_pods
-        finished_pods.each do |pod|
-          begin
-            pods_client.delete_pod(pod.metadata.name, pod.metadata.namespace)
-          rescue KubeException => e
-            raise unless e.error_code == 404
-          end
-        end
-      end
-
       def apply_kubernetes_job
         # Do not start job if we have reached our maximum count
         return if jobs_maxed?(manifest["metadata"]["name"])
@@ -84,20 +64,6 @@ module Resque
         @default_namespace = context.namespace if context.namespace
 
         Kubeclient::Client.new(context.endpoint + scope, context.version, context.options)
-      end
-
-      def finished_jobs
-        resque_jobs = jobs_client.get_jobs(namespace: namespace, label_selector: "resque-kubernetes=job")
-        resque_jobs.select { |job| job.spec.completions == job.status.succeeded }
-      end
-
-      def finished_pods
-        resque_jobs = pods_client.get_pods(namespace: namespace, label_selector: "resque-kubernetes=pod")
-        resque_jobs.select do |pod|
-          pod.status.phase == "Succeeded" && pod.status.containerStatuses.all? do |status|
-            status.state.terminated.reason == "Completed"
-          end
-        end
       end
 
       def jobs_maxed?(name)

@@ -108,46 +108,6 @@ describe Resque::Kubernetes::Job do
         end
       end
 
-      it "reaps any completed jobs matching our label" do
-        jobs = [working_job, done_job]
-        expect(client).to receive(:get_jobs).with(label_selector: "resque-kubernetes=job").and_return(jobs)
-        expect(client).to receive(:delete_job).with(done_job.metadata.name, done_job.metadata.namespace)
-        subject.before_enqueue_kubernetes_job
-      end
-
-      context "when a job is deleted while reaping completed jobs" do
-        let(:error) { KubeException.new(404, 'job "thing" not found', spy("response")) }
-
-        before do
-          allow(client).to receive(:get_jobs).and_return([working_job, done_job])
-          allow(client).to receive(:delete_job).and_raise(error)
-        end
-
-        it "gracefully continues" do
-          expect { subject.before_enqueue_kubernetes_job }.not_to raise_error
-        end
-      end
-
-      it "reaps all successfully completed pods of the jobs matching our label" do
-        pods = [working_pod, done_pod, oom_pod]
-        expect(client).to receive(:get_pods).with(label_selector: "resque-kubernetes=pod").and_return(pods)
-        expect(client).to receive(:delete_pod).with(done_pod.metadata.name, done_pod.metadata.namespace)
-        subject.before_enqueue_kubernetes_job
-      end
-
-      context "when a pod is deleted while reaping completed pods" do
-        let(:error) { KubeException.new(404, 'pod "thing" not found', spy("response")) }
-
-        before do
-          allow(client).to receive(:get_pods).and_return([working_pod, done_pod])
-          allow(client).to receive(:delete_pod).and_raise(error)
-        end
-
-        it "gracefully continues" do
-          expect { subject.before_enqueue_kubernetes_job }.not_to raise_error
-        end
-      end
-
       shared_examples "max workers" do
         context "when the maximum number of matching, working jobs is met" do
           let(:workers) { 1 }
